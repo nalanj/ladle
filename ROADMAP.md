@@ -5,7 +5,6 @@ x Invoke command
 x Custom port for rpc
 
 - Confl config loading for multiple functions
-- Predefined payloads from a folder
 
 - HTTP gateway for calling functions by route over http
 
@@ -14,6 +13,7 @@ x Custom port for rpc
 - Simple UI for seeing list of registered functions
 - List of registered routes in gateway
 - Call functions from UI
+- Predefined payloads
 
 - Support for auth
 - Support for SQS

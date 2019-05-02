@@ -8,9 +8,11 @@ import (
 )
 
 var rpcAddress string
+var httpAddress string
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&rpcAddress, "rpc-address", "r", "localhost:3000", "RPC invocation Address")
+	rootCmd.PersistentFlags().StringVarP(&httpAddress, "http-address", "a", "localhost:3001", "API Gateway Address")
 }
 
 var rootCmd = &cobra.Command{
