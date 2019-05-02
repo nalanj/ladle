@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"net/rpc"
 	"os"
@@ -47,7 +48,7 @@ func serve() error {
 
 	functions[f.Name] = f
 
-	go invokeListener(3000)
+	go invokeListener()
 	<-done
 
 	return nil
@@ -55,8 +56,8 @@ func serve() error {
 
 // invokeListener listens with rpc to the given port and passes messages on to the
 // called function
-func invokeListener(port int) {
-	lis, lisErr := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
+func invokeListener() {
+	lis, lisErr := net.Listen("tcp", rpcAddress)
 	if lisErr != nil {
 		panic(lisErr)
 	}
@@ -65,5 +66,6 @@ func invokeListener(port int) {
 		rpc.RegisterName(f.Name, f)
 	}
 
+	log.Printf("RPC: Listening on %s\n", rpcAddress)
 	rpc.Accept(lis)
 }

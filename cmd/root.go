@@ -7,11 +7,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var rpcAddress string
+
+func init() {
+	rootCmd.PersistentFlags().StringVarP(&rpcAddress, "rpc-address", "r", "localhost:3000", "RPC invocation Address")
+}
+
 var rootCmd = &cobra.Command{
-	Use:   "ladle",
-	Short: "ladle is a runtime for Go based lambdas on localhost",
-	Long:  "A local runtime for Go based lambdas with a focus on ease of use.",
-	Run:   func(cmd *cobra.Command, args []string) {},
+	Use: "ladle",
 }
 
 // Execute runs the root command

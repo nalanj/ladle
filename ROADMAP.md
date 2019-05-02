@@ -1,6 +1,8 @@
 x Get Cobra going for cli system
 
-- Invoke command
+x Invoke command
+
+x Custom port for rpc
 
 - Confl config loading for multiple functions
 - Predefined payloads from a folder

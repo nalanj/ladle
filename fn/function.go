@@ -51,8 +51,8 @@ func Start(f *Function) error {
 	f.cmd.Stderr = write
 	go f.readOutput()
 
-	log.Printf("Fn %s: Starting on port %d\n", f.Name, f.port)
 	runErr := f.cmd.Start()
+	log.Printf("Fn %s: Started on port %d\n", f.Name, f.port)
 	return runErr
 }
 

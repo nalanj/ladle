@@ -22,7 +22,7 @@ var invokeCmd = &cobra.Command{
 	`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client, clientErr := rpc.Dial("tcp", "localhost:3000")
+		client, clientErr := rpc.Dial("tcp", rpcAddress)
 		if clientErr != nil {
 			fmt.Println(clientErr)
 			os.Exit(1)
