@@ -15,12 +15,12 @@ func init() {
 }
 
 var invokeCmd = &cobra.Command{
-	Use:   "invoke [function]",
+	Use:   "invoke [function] [payload-path]",
 	Short: "Invoke the given function with stdin",
 	Long: `
 		Invoke runs the given function with the input from stdin.
 	`,
-	Args: cobra.MinimumNArgs(1),
+	Args: cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
 		client, clientErr := rpc.Dial("tcp", rpcAddress)
 		if clientErr != nil {
@@ -28,10 +28,38 @@ var invokeCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		payload, readErr := ioutil.ReadAll(os.Stdin)
-		if readErr != nil {
-			fmt.Println(readErr)
+		info, statErr := os.Stdin.Stat()
+		if statErr != nil {
+			fmt.Println(statErr)
 			os.Exit(1)
+		}
+
+		var payload []byte
+		if info.Mode()&os.ModeNamedPipe != 0 {
+			var readErr error
+			payload, readErr = ioutil.ReadAll(os.Stdin)
+			if readErr != nil {
+				fmt.Println(readErr)
+				os.Exit(1)
+			}
+		} else {
+			if args[1] == "" {
+				fmt.Println("No payload specified")
+				os.Exit(1)
+			}
+
+			payloadFile, openErr := os.Open(args[1])
+			if openErr != nil {
+				fmt.Println(openErr)
+				os.Exit(1)
+			}
+
+			var readErr error
+			payload, readErr = ioutil.ReadAll(payloadFile)
+			if readErr != nil {
+				fmt.Println(readErr)
+				os.Exit(1)
+			}
 		}
 
 		req := &messages.InvokeRequest{
