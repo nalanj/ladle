@@ -1,0 +1,3 @@
+Hello={
+  Handler="../hello-lambda/hello/hello"
+}
