@@ -9,6 +9,7 @@ import (
 	"net/rpc"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/aws/aws-lambda-go/lambda/messages"
 )
@@ -72,17 +73,22 @@ func (f *Function) readOutput() {
 
 // Invoke invokes the given function with the given payload
 func (f *Function) Invoke(req *messages.InvokeRequest, resp *messages.InvokeResponse) error {
+	startTime := time.Now()
+
 	client, clientErr := rpc.Dial("tcp", fmt.Sprintf("localhost:%d", f.port))
 	if clientErr != nil {
 		return clientErr
 	}
 
 	callErr := client.Call("Function.Invoke", req, resp)
-	if callErr != nil {
-		return callErr
-	}
+	log.Printf(
+		"Fn %s(%s): Invoke (%.3fms)",
+		f.Name,
+		req.RequestId,
+		float64(time.Now().Sub(startTime).Nanoseconds())/1000000,
+	)
 
-	return nil
+	return callErr
 }
 
 // freePort grabs a free port

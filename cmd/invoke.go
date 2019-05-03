@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/aws/aws-lambda-go/lambda/messages"
+	"github.com/gofrs/uuid"
 	"github.com/spf13/cobra"
 )
 
@@ -63,7 +64,8 @@ var invokeCmd = &cobra.Command{
 		}
 
 		req := &messages.InvokeRequest{
-			Payload: payload,
+			RequestId: uuid.Must(uuid.NewV4()).String(),
+			Payload:   payload,
 		}
 		resp := &messages.InvokeResponse{}
 

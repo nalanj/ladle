@@ -2,55 +2,127 @@ package gw
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda/messages"
+	"github.com/gofrs/uuid"
 	"github.com/nalanj/ladle/config"
 	"github.com/nalanj/ladle/fn"
 )
 
+// wrappedRequest wraps an http request with a struct
+type wrappedRequest struct {
+	id string
+	r  *http.Request
+}
+
+// newRequest initializes a new wrapped request
+func newRequest(r *http.Request) *wrappedRequest {
+	return &wrappedRequest{
+		id: uuid.Must(uuid.NewV4()).String(),
+		r:  r,
+	}
+}
+
+// log logs a message relating to this request
+func (r *wrappedRequest) log(msg string) {
+	log.Printf("HTTP %s: %s", r.id, msg)
+}
+
+// errorLog writes an error log message for this request
+func (r *wrappedRequest) errorLog(err error) {
+	r.log(fmt.Sprintf("Error: %s", err))
+}
+
+// prepareRequest converts an http.Request into an InvokeRequest
+func (r *wrappedRequest) prepareRequest(pathParams map[string]string) (*messages.InvokeRequest, error) {
+	body, bodyErr := ioutil.ReadAll(r.r.Body)
+	if bodyErr != nil {
+		return nil, bodyErr
+	}
+
+	gwR := events.APIGatewayProxyRequest{
+		Resource:        "",
+		Path:            r.r.URL.Path,
+		PathParameters:  pathParams,
+		HTTPMethod:      r.r.Method,
+		Headers:         make(map[string]string),
+		Body:            string(body),
+		IsBase64Encoded: false,
+		RequestContext: events.APIGatewayProxyRequestContext{
+			RequestID: r.id,
+		},
+	}
+
+	payload, marshalErr := json.Marshal(gwR)
+	if marshalErr != nil {
+		return nil, marshalErr
+	}
+
+	return &messages.InvokeRequest{RequestId: r.id, Payload: payload}, nil
+}
+
 // InvokeHandler returns a handler that can invoke called functions via http
 func InvokeHandler(conf *config.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		f, pathParams := route(conf, r)
-		if f == nil {
-			log.Printf("HTTP: No function match for %s", r.URL.Path)
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
+		startTime := time.Now()
 
-		invokeReq, prepareErr := prepareRequest(r, pathParams)
-		if prepareErr != nil {
-			log.Printf("HTTP: Error: %s\n", prepareErr)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		wr := newRequest(r)
+		wr.log(fmt.Sprintf("Start %s", wr.r.URL.Path))
+		invoke(conf, w, wr)
 
-		resp := &messages.InvokeResponse{}
-		invokeErr := f.Invoke(invokeReq, resp)
-		if invokeErr != nil {
-			log.Printf("HTTP: Error: %s\n", invokeErr)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		if resp.Error != nil {
-			log.Printf("HTTP: Error: %s\n", resp.Error.Message)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		writeErr := writeInvokeResponse(w, resp)
-		if writeErr != nil {
-			log.Printf("HTTP: Error: %s\n", writeErr)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		wr.log(
+			fmt.Sprintf(
+				"Invoke (%.3fms)",
+				float64(time.Now().Sub(startTime).Nanoseconds())/1000000,
+			),
+		)
 	})
+}
+
+// invoke wraps http invocation and makes it easier to deal with logging out
+// of requests
+func invoke(conf *config.Config, w http.ResponseWriter, r *wrappedRequest) {
+	f, pathParams := route(conf, r.r)
+	if f == nil {
+		r.log("No matching route")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	invokeReq, prepareErr := r.prepareRequest(pathParams)
+	if prepareErr != nil {
+		r.errorLog(prepareErr)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	resp := &messages.InvokeResponse{}
+	invokeErr := f.Invoke(invokeReq, resp)
+	if invokeErr != nil {
+		r.errorLog(invokeErr)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if resp.Error != nil {
+		r.log(fmt.Sprintf("Invocation Error: %s", resp.Error))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	writeErr := writeInvokeResponse(w, resp)
+	if writeErr != nil {
+		r.errorLog(writeErr)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 // route converts a request to its corresponding function
@@ -100,32 +172,6 @@ func routeMatch(r *http.Request, event *fn.Event) (map[string]string, bool) {
 	}
 
 	return pathParams, true
-}
-
-// prepareRequest converts an http.Request into an InvokeRequest
-func prepareRequest(r *http.Request, pathParams map[string]string) (*messages.InvokeRequest, error) {
-	body, bodyErr := ioutil.ReadAll(r.Body)
-	if bodyErr != nil {
-		return nil, bodyErr
-	}
-
-	gwR := events.APIGatewayProxyRequest{
-		Resource:        "",
-		Path:            r.URL.Path,
-		PathParameters:  pathParams,
-		HTTPMethod:      r.Method,
-		Headers:         make(map[string]string),
-		Body:            string(body),
-		IsBase64Encoded: false,
-		RequestContext:  events.APIGatewayProxyRequestContext{},
-	}
-
-	payload, marshalErr := json.Marshal(gwR)
-	if marshalErr != nil {
-		return nil, marshalErr
-	}
-
-	return &messages.InvokeRequest{Payload: payload}, nil
 }
 
 // writes an http response based on the given InvokeResponse

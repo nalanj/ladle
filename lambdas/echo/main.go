@@ -1,8 +1,5 @@
 package main
 
-// Echo is a lambda for simply echoing the request payload back to the response
-// via http. It's helpful for debugging.
-
 import (
 	"encoding/json"
 

@@ -19,12 +19,17 @@ x Confl config loading for multiple functions
   - Flesh out request conversions
   - Proxy matches
 
+x Add request id as uuid on invocation and trace in logs with it
+
 x Makefile
 
-- Add timings to call logs
+- Block requests to one per lambda at a time to control for logging
+x Add timings to call logs
 - Automatic function restart
 
 - TEST EVERYTHING
+
+- Base64 body handling
 
 - Simple UI for seeing list of registered functions
 - List of registered routes in gateway
