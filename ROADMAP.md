@@ -14,9 +14,10 @@ x Confl config loading for multiple functions
 
 - HTTP gateway for calling functions by route over http
   x Extract bad routing logic to function
-  - Add meta for confl events
-  - Route based on meta
+  x Add meta for confl events
+  x Route based on meta
   - Flesh out request conversions
+  - Proxy matches
 
 - Add timings to call logs
 - Automatic function restart

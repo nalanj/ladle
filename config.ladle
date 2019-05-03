@@ -4,6 +4,6 @@ Functions={
 }
 
 Events=[
-  {Source=API Target=Foo Meta={Route="/Foo"}}
+  {Source=API Target=Foo Meta={Route="/Foo/{name}"}}
 ]
 
