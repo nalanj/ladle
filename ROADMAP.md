@@ -19,6 +19,8 @@ x Confl config loading for multiple functions
   - Flesh out request conversions
   - Proxy matches
 
+x Makefile
+
 - Add timings to call logs
 - Automatic function restart
 

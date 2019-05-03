@@ -1,6 +1,6 @@
 Functions={
-  Hello={Handler="../hello-lambda/hello/hello"}
-  Foo={Handler="../hello-lambda/hello/hello"}
+  Hello={Handler="build/echo"}
+  Foo={Handler="build/echo"}
 }
 
 Events=[
