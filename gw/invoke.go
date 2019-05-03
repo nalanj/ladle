@@ -15,17 +15,7 @@ import (
 // InvokeHandler returns a handler that can invoke called functions via http
 func InvokeHandler(conf *config.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// look up the function to call based on the path
-		fnName := r.URL.Path[1:]
-
-		var f *fn.Function
-		for _, event := range conf.Events {
-			if event.Source == fn.APISource && event.Target == fnName {
-				f = conf.Functions[event.Target]
-			}
-		}
-
+		f := route(conf, r)
 		if f == nil {
 			log.Printf("HTTP: No function match for %s", r.URL.Path)
 			w.WriteHeader(http.StatusNotFound)
@@ -60,6 +50,22 @@ func InvokeHandler(conf *config.Config) http.Handler {
 			return
 		}
 	})
+}
+
+// route converts a request to its corresponding function
+func route(conf *config.Config, r *http.Request) *fn.Function {
+	fnName := r.URL.Path[1:]
+
+	for _, event := range conf.Events {
+		if event.Source == fn.APISource && event.Target == fnName {
+			f, ok := conf.Functions[event.Target]
+			if ok {
+				return f
+			}
+		}
+	}
+
+	return nil
 }
 
 // prepareRequest converts an http.Request into an InvokeRequest

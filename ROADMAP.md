@@ -13,7 +13,9 @@ x Confl config loading for multiple functions
   - Block duplicate function sections
 
 - HTTP gateway for calling functions by route over http
-  - Routing
+  x Extract bad routing logic to function
+  - Add meta for confl events
+  - Route based on meta
   - Flesh out request conversions
 
 - Add timings to call logs

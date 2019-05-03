@@ -1,14 +1,9 @@
 Functions={
-  Hello={
-    Handler="../hello-lambda/hello/hello"
-  }
-
-  Foo={
-    Handler="../hello-lambda/hello/hello"
-  }
+  Hello={Handler="../hello-lambda/hello/hello"}
+  Foo={Handler="../hello-lambda/hello/hello"}
 }
 
 Events=[
-  {Source=API Target=Foo}
+  {Source=API Target=Foo Meta={Route="/Foo"}}
 ]
 

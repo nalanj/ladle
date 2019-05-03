@@ -8,6 +8,7 @@ import (
 	"net/rpc"
 	"os"
 
+	"github.com/nalanj/confl"
 	"github.com/nalanj/ladle/config"
 	"github.com/nalanj/ladle/fn"
 	"github.com/nalanj/ladle/gw"
@@ -26,7 +27,11 @@ var serveCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := serve()
 		if err != nil {
-			fmt.Println(err)
+			if parseErr, ok := err.(*confl.ParseError); ok {
+				fmt.Println(parseErr.ErrorWithCode())
+			} else {
+				fmt.Println(err)
+			}
 			os.Exit(1)
 		}
 	},

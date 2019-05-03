@@ -171,10 +171,39 @@ func readEvent(eventNode confl.Node) (*fn.Event, error) {
 				}
 
 				event.Target = node.Value()
+
+			case "Meta":
+				meta, metaErr := readEventMeta(node)
+				if metaErr != nil {
+					return nil, metaErr
+				}
+
+				event.Meta = meta
 			}
 			key = nil
 		}
 	}
 
 	return event, nil
+}
+
+// readEventMeta reads metadata
+func readEventMeta(metaNode confl.Node) (map[string]string, error) {
+	if metaNode.Type() != confl.MapType {
+		return nil, errors.New("Invalid meta section")
+	}
+
+	meta := make(map[string]string)
+
+	var key confl.Node
+	for _, node := range metaNode.Children() {
+		if key == nil {
+			key = node
+		} else {
+			meta[key.Value()] = node.Value()
+			key = nil
+		}
+	}
+
+	return meta, nil
 }
