@@ -9,18 +9,34 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda/messages"
 	"github.com/nalanj/ladle/config"
+	"github.com/nalanj/ladle/fn"
 )
 
 // InvokeHandler returns a handler that can invoke called functions via http
 func InvokeHandler(conf *config.Config) http.Handler {
-	f := conf.Functions["Hello"]
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// look up the function to call based on the path
+		fnName := r.URL.Path[1:]
+
+		var f *fn.Function
+		for _, event := range conf.Events {
+			if event.Source == fn.APISource && event.Target == fnName {
+				f = conf.Functions[event.Target]
+			}
+		}
+
+		if f == nil {
+			log.Printf("HTTP: No function match for %s", r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 
 		invokeReq, prepareErr := prepareRequest(r)
 		if prepareErr != nil {
 			log.Printf("HTTP: Error: %s\n", prepareErr)
 			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 
 		resp := &messages.InvokeResponse{}
@@ -28,17 +44,20 @@ func InvokeHandler(conf *config.Config) http.Handler {
 		if invokeErr != nil {
 			log.Printf("HTTP: Error: %s\n", invokeErr)
 			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 
 		if resp.Error != nil {
 			log.Printf("HTTP: Error: %s\n", resp.Error.Message)
 			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 
 		writeErr := writeInvokeResponse(w, resp)
 		if writeErr != nil {
 			log.Printf("HTTP: Error: %s\n", writeErr)
 			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 	})
 }

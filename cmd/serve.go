@@ -37,7 +37,7 @@ var functions map[string]*fn.Function
 func serve() error {
 	done := make(chan bool)
 
-	conf, confErr := config.Parse("./config.ladle")
+	conf, confErr := config.Parse(configPath)
 	if confErr != nil {
 		return confErr
 	}

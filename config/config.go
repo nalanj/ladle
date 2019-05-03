@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/nalanj/confl"
@@ -13,6 +14,9 @@ type Config struct {
 
 	// Functions is a map of the named functions
 	Functions map[string]*fn.Function
+
+	// Events is a slice of defined events
+	Events []*fn.Event
 }
 
 // Parse parses the config file and returns the resulting config
@@ -36,16 +40,23 @@ func Parse(path string) (*Config, error) {
 		if key == nil {
 			key = node
 		} else {
-			if key.Type() != confl.WordType && key.Type() != confl.StringType {
-				return nil, errors.New("Invalid function name")
+			switch key.Value() {
+			case "Functions":
+				functions, fnErr := readFunctions(node)
+				if fnErr != nil {
+					return nil, fnErr
+				}
+				conf.Functions = functions
+			case "Events":
+				events, eventsErr := readEvents(node)
+				if eventsErr != nil {
+					return nil, eventsErr
+				}
+				conf.Events = events
+			default:
+				return nil, fmt.Errorf("Unknown key")
 			}
 
-			fnDef, fnErr := readFunction(key.Value(), node)
-			if fnErr != nil {
-				return nil, fnErr
-			}
-
-			conf.Functions[fnDef.Name] = fnDef
 			key = nil
 		}
 	}
@@ -53,8 +64,39 @@ func Parse(path string) (*Config, error) {
 	return conf, nil
 }
 
+// readFunctions reads the functions for the document
+func readFunctions(fnsNode confl.Node) (map[string]*fn.Function, error) {
+	if fnsNode.Type() != confl.MapType {
+		return nil, errors.New("Expected map for Functions section")
+	}
+
+	functions := make(map[string]*fn.Function)
+
+	var key confl.Node
+	for _, node := range fnsNode.Children() {
+		if key == nil {
+			key = node
+		} else {
+			fnDef, fnErr := readFunction(key, node)
+			if fnErr != nil {
+				return nil, fnErr
+			}
+
+			functions[fnDef.Name] = fnDef
+			key = nil
+		}
+	}
+
+	return functions, nil
+}
+
 // readFunction reads a function def from the config
-func readFunction(name string, fnNode confl.Node) (*fn.Function, error) {
+func readFunction(fnKey confl.Node, fnNode confl.Node) (*fn.Function, error) {
+	if fnKey.Type() != confl.StringType && fnKey.Type() != confl.WordType {
+		return nil, errors.New("Invalid function name")
+	}
+	name := fnKey.Value()
+
 	if fnNode.Type() != confl.MapType {
 		return nil, errors.New("Invalid function definition")
 	}
@@ -68,10 +110,6 @@ func readFunction(name string, fnNode confl.Node) (*fn.Function, error) {
 		} else {
 			switch key.Value() {
 			case "Handler":
-				if key.Type() != confl.WordType && key.Type() != confl.StringType {
-					return nil, errors.New("Invalid key")
-				}
-
 				if node.Type() != confl.WordType && node.Type() != confl.StringType {
 					return nil, errors.New("Invalid handler path")
 				}
@@ -85,4 +123,58 @@ func readFunction(name string, fnNode confl.Node) (*fn.Function, error) {
 	}
 
 	return out, nil
+}
+
+// readEvents reads confl nodes and converts them to events
+func readEvents(eventsNode confl.Node) ([]*fn.Event, error) {
+	if eventsNode.Type() != confl.ListType {
+		return nil, errors.New("Invalid Events section")
+	}
+
+	events := []*fn.Event{}
+
+	for _, node := range eventsNode.Children() {
+		event, eventErr := readEvent(node)
+		if eventErr != nil {
+			return nil, eventErr
+		}
+
+		events = append(events, event)
+	}
+
+	return events, nil
+}
+
+// readEvent reads a single event from confl
+func readEvent(eventNode confl.Node) (*fn.Event, error) {
+	if eventNode.Type() != confl.MapType {
+		return nil, errors.New("Invalid event")
+	}
+
+	event := &fn.Event{}
+
+	var key confl.Node
+	for _, node := range eventNode.Children() {
+		if key == nil {
+			key = node
+		} else {
+			switch key.Value() {
+			case "Source":
+				if node.Type() != confl.WordType && node.Type() != confl.StringType {
+					return nil, errors.New("Invalid event source")
+				}
+
+				event.Source = node.Value()
+			case "Target":
+				if node.Type() != confl.WordType && node.Type() != confl.StringType {
+					return nil, errors.New("Invalid event source")
+				}
+
+				event.Target = node.Value()
+			}
+			key = nil
+		}
+	}
+
+	return event, nil
 }
