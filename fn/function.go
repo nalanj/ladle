@@ -75,8 +75,9 @@ func (f *Function) readOutput() {
 func (f *Function) Invoke(req *messages.InvokeRequest, resp *messages.InvokeResponse) error {
 	startTime := time.Now()
 
-	client, clientErr := rpc.Dial("tcp", fmt.Sprintf("localhost:%d", f.port))
+	client, clientErr := rpc.Dial("tcp", fmt.Sprintf(":%d", f.port))
 	if clientErr != nil {
+		fmt.Println(clientErr)
 		return clientErr
 	}
 
@@ -93,7 +94,7 @@ func (f *Function) Invoke(req *messages.InvokeRequest, resp *messages.InvokeResp
 
 // freePort grabs a free port
 func freePort() (int, error) {
-	ln, listenErr := net.Listen("tcp", "localhost:0")
+	ln, listenErr := net.Listen("tcp", ":0")
 	if listenErr != nil {
 		return 0, listenErr
 	}
