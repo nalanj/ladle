@@ -8,7 +8,7 @@ x Confl config loading for multiple functions
   - Get confl nodes to include debug info so errors are clearer
   - Clear up errors in parsing config files
   - Confl node.IsText() to help with checking word and string type constantly
-  - Confl map iteration solution
+  x Confl map iteration solution
   - Block duplicate function names
   - Block duplicate function sections
 

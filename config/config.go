@@ -79,7 +79,7 @@ func readFunctions(fnsNode confl.Node) (map[string]*fn.Function, error) {
 
 // readFunction reads a function def from the config
 func readFunction(fnKey confl.Node, fnNode confl.Node) (*fn.Function, error) {
-	if fnKey.Type() != confl.StringType && fnKey.Type() != confl.WordType {
+	if !confl.IsText(fnKey) {
 		return nil, errors.New("Invalid function name")
 	}
 	name := fnKey.Value()
@@ -93,7 +93,7 @@ func readFunction(fnKey confl.Node, fnNode confl.Node) (*fn.Function, error) {
 	for _, pair := range confl.KVPairs(fnNode) {
 		switch pair.Key.Value() {
 		case "Handler":
-			if pair.Value.Type() != confl.WordType && pair.Value.Type() != confl.StringType {
+			if !confl.IsText(pair.Value) {
 				return nil, errors.New("Invalid handler path")
 			}
 
@@ -137,13 +137,13 @@ func readEvent(eventNode confl.Node) (*fn.Event, error) {
 	for _, pair := range confl.KVPairs(eventNode) {
 		switch pair.Key.Value() {
 		case "Source":
-			if pair.Value.Type() != confl.WordType && pair.Value.Type() != confl.StringType {
+			if !confl.IsText(pair.Value) {
 				return nil, errors.New("Invalid event source")
 			}
 
 			event.Source = pair.Value.Value()
 		case "Target":
-			if pair.Value.Type() != confl.WordType && pair.Value.Type() != confl.StringType {
+			if !confl.IsText(pair.Value) {
 				return nil, errors.New("Invalid event source")
 			}
 
