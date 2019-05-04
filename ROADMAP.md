@@ -7,10 +7,11 @@ x Custom port for rpc
 x Confl config loading for multiple functions
   - Get confl nodes to include debug info so errors are clearer
   - Clear up errors in parsing config files
-  - Confl node.IsText() to help with checking word and string type constantly
+  x Confl node.IsText() to help with checking word and string type constantly
   x Confl map iteration solution
   - Block duplicate function names
   - Block duplicate function sections
+  - Port configs in file
 
 - HTTP gateway for calling functions by route over http
   x Extract bad routing logic to function
