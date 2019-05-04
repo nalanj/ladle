@@ -35,29 +35,22 @@ func Parse(path string) (*Config, error) {
 		return nil, parseErr
 	}
 
-	var key confl.Node
-	for _, node := range doc.Children() {
-		if key == nil {
-			key = node
-		} else {
-			switch key.Value() {
-			case "Functions":
-				functions, fnErr := readFunctions(node)
-				if fnErr != nil {
-					return nil, fnErr
-				}
-				conf.Functions = functions
-			case "Events":
-				events, eventsErr := readEvents(node)
-				if eventsErr != nil {
-					return nil, eventsErr
-				}
-				conf.Events = events
-			default:
-				return nil, fmt.Errorf("Unknown key")
+	for _, pair := range confl.KVPairs(doc) {
+		switch pair.Key.Value() {
+		case "Functions":
+			functions, fnErr := readFunctions(pair.Value)
+			if fnErr != nil {
+				return nil, fnErr
 			}
-
-			key = nil
+			conf.Functions = functions
+		case "Events":
+			events, eventsErr := readEvents(pair.Value)
+			if eventsErr != nil {
+				return nil, eventsErr
+			}
+			conf.Events = events
+		default:
+			return nil, fmt.Errorf("Unknown key")
 		}
 	}
 
@@ -72,19 +65,13 @@ func readFunctions(fnsNode confl.Node) (map[string]*fn.Function, error) {
 
 	functions := make(map[string]*fn.Function)
 
-	var key confl.Node
-	for _, node := range fnsNode.Children() {
-		if key == nil {
-			key = node
-		} else {
-			fnDef, fnErr := readFunction(key, node)
-			if fnErr != nil {
-				return nil, fnErr
-			}
-
-			functions[fnDef.Name] = fnDef
-			key = nil
+	for _, pair := range confl.KVPairs(fnsNode) {
+		fnDef, fnErr := readFunction(pair.Key, pair.Value)
+		if fnErr != nil {
+			return nil, fnErr
 		}
+
+		functions[fnDef.Name] = fnDef
 	}
 
 	return functions, nil
@@ -103,22 +90,16 @@ func readFunction(fnKey confl.Node, fnNode confl.Node) (*fn.Function, error) {
 
 	out := &fn.Function{Name: name}
 
-	var key confl.Node
-	for _, node := range fnNode.Children() {
-		if key == nil {
-			key = node
-		} else {
-			switch key.Value() {
-			case "Handler":
-				if node.Type() != confl.WordType && node.Type() != confl.StringType {
-					return nil, errors.New("Invalid handler path")
-				}
-
-				out.Handler = node.Value()
-			default:
-				return nil, errors.New("Invalid key")
+	for _, pair := range confl.KVPairs(fnNode) {
+		switch pair.Key.Value() {
+		case "Handler":
+			if pair.Value.Type() != confl.WordType && pair.Value.Type() != confl.StringType {
+				return nil, errors.New("Invalid handler path")
 			}
-			key = nil
+
+			out.Handler = pair.Value.Value()
+		default:
+			return nil, errors.New("Invalid key")
 		}
 	}
 
@@ -153,34 +134,28 @@ func readEvent(eventNode confl.Node) (*fn.Event, error) {
 
 	event := &fn.Event{}
 
-	var key confl.Node
-	for _, node := range eventNode.Children() {
-		if key == nil {
-			key = node
-		} else {
-			switch key.Value() {
-			case "Source":
-				if node.Type() != confl.WordType && node.Type() != confl.StringType {
-					return nil, errors.New("Invalid event source")
-				}
-
-				event.Source = node.Value()
-			case "Target":
-				if node.Type() != confl.WordType && node.Type() != confl.StringType {
-					return nil, errors.New("Invalid event source")
-				}
-
-				event.Target = node.Value()
-
-			case "Meta":
-				meta, metaErr := readEventMeta(node)
-				if metaErr != nil {
-					return nil, metaErr
-				}
-
-				event.Meta = meta
+	for _, pair := range confl.KVPairs(eventNode) {
+		switch pair.Key.Value() {
+		case "Source":
+			if pair.Value.Type() != confl.WordType && pair.Value.Type() != confl.StringType {
+				return nil, errors.New("Invalid event source")
 			}
-			key = nil
+
+			event.Source = pair.Value.Value()
+		case "Target":
+			if pair.Value.Type() != confl.WordType && pair.Value.Type() != confl.StringType {
+				return nil, errors.New("Invalid event source")
+			}
+
+			event.Target = pair.Value.Value()
+
+		case "Meta":
+			meta, metaErr := readEventMeta(pair.Value)
+			if metaErr != nil {
+				return nil, metaErr
+			}
+
+			event.Meta = meta
 		}
 	}
 
