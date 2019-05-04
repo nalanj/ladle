@@ -112,7 +112,7 @@ func invoke(conf *config.Config, w http.ResponseWriter, r *wrappedRequest) {
 	}
 
 	if resp.Error != nil {
-		r.log(fmt.Sprintf("Invocation Error: %s", resp.Error))
+		r.log(fmt.Sprintf("Invocation Error: %s", resp.Error.Message))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
