@@ -36,7 +36,7 @@ type Function struct {
 }
 
 // Start starts the function's executable
-func Start(f *Function) error {
+func (f *Function) Start() error {
 	port, portErr := freePort()
 	if portErr != nil {
 		return portErr
