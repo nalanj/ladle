@@ -52,9 +52,27 @@ func (f *Function) Start() error {
 	f.cmd.Stderr = write
 	go f.readOutput()
 
-	runErr := f.cmd.Start()
+	if runErr := f.cmd.Start(); runErr != nil {
+		return runErr
+	}
+
+	// give it up to 10 seconds to actually start
+	pinged := false
+	start := time.Now()
+	for time.Now().Before(start.Add(10 * time.Second)) {
+		if f.Ping() {
+			pinged = true
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	if !pinged {
+		return fmt.Errorf("Fn %s: could not ping on startup", f.Name)
+	}
+
 	log.Printf("Fn %s: Started on port %d\n", f.Name, f.port)
-	return runErr
+	return nil
 }
 
 // readOutput reads output from the output buffer
@@ -71,11 +89,32 @@ func (f *Function) readOutput() {
 	}
 }
 
+// rpcClient returns a new rpc client
+func (f *Function) rpcClient() (*rpc.Client, error) {
+	return rpc.Dial("tcp", fmt.Sprintf(":%d", f.port))
+}
+
+// Ping pings the given function and returns true on success, or false if the
+// ping failed for any reason
+func (f *Function) Ping() bool {
+	client, clientErr := f.rpcClient()
+	if clientErr != nil {
+		return false
+	}
+
+	pingErr := client.Call("Function.Ping", &messages.PingRequest{}, &messages.PingResponse{})
+	if pingErr != nil {
+		return false
+	}
+
+	return true
+}
+
 // Invoke invokes the given function with the given payload
 func (f *Function) Invoke(req *messages.InvokeRequest, resp *messages.InvokeResponse) error {
 	startTime := time.Now()
 
-	client, clientErr := rpc.Dial("tcp", fmt.Sprintf(":%d", f.port))
+	client, clientErr := f.rpcClient()
 	if clientErr != nil {
 		fmt.Println(clientErr)
 		return clientErr

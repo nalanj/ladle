@@ -5,7 +5,7 @@ build: build/ladle build/echo
 # Test everything
 .PHONY: test
 test:
-	go test -race ./...
+	go test -cover -race ./...
 
 .PHONY: build/ladle
 build/ladle:

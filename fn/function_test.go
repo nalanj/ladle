@@ -2,7 +2,6 @@ package fn
 
 import (
 	"testing"
-	"time"
 
 	"github.com/aws/aws-lambda-go/lambda/messages"
 	"github.com/stretchr/testify/assert"
@@ -30,8 +29,6 @@ func TestFunctionInvoke(t *testing.T) {
 	f := &Function{Name: "Test", Handler: "../build/echo"}
 	err := f.Start()
 	assert.Nil(t, err)
-
-	time.Sleep(100 * time.Millisecond)
 
 	req := &messages.InvokeRequest{Payload: []byte("{}")}
 	resp := &messages.InvokeResponse{}
