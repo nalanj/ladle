@@ -11,6 +11,8 @@ import (
 )
 
 func TestPrepareRequest(t *testing.T) {
+	t.Parallel()
+
 	req, reqErr := http.NewRequest(
 		"POST",
 		"https://testing.com:3030/test/function",

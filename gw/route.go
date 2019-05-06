@@ -22,6 +22,7 @@ func route(conf *config.Config, r *http.Request) (*fn.Function, map[string]strin
 
 // routeMatch tests if a route matches and returns path parts if it does
 func routeMatch(r *http.Request, event *fn.Event) (map[string]string, bool) {
+
 	if event.Source != fn.APISource {
 		return nil, false
 	}
@@ -37,6 +38,8 @@ func routeMatch(r *http.Request, event *fn.Event) (map[string]string, bool) {
 	}
 
 	pathParams := make(map[string]string)
+
+	readParts := 0
 	for i := 0; i < len(routeParts); i++ {
 		if len(reqParts) <= i {
 			return nil, false
@@ -52,6 +55,11 @@ func routeMatch(r *http.Request, event *fn.Event) (map[string]string, bool) {
 				return nil, false
 			}
 		}
+		readParts++
+	}
+
+	if readParts < len(reqParts) {
+		return nil, false
 	}
 
 	return pathParams, true
