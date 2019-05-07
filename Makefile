@@ -9,7 +9,7 @@ test:
 
 .PHONY: build/ladle
 build/ladle:
-	go build -o $@ .
+	go build -o $@
 
 .PHONY: build/echo
 build/echo:

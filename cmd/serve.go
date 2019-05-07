@@ -48,7 +48,7 @@ func serve() error {
 	}
 
 	for _, f := range conf.Functions {
-		err := f.Start()
+		err := fn.Start(f)
 		if err != nil {
 			panic(err)
 		}

@@ -5,6 +5,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/gofrs/uuid v3.2.0+incompatible h1:y12jRkkFxsd7GpqdSZ+/KCs/fJbqpEXSGd4+jfEaewE=
 github.com/gofrs/uuid v3.2.0+incompatible/go.mod h1:b2aQJv3Z4Fp6yNu3cdSllBxTCLRxnplIgP/c0N/04lM=
+github.com/inconshreveable/mousetrap v1.0.0 h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NHg9XEKhtSvM=
+github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/nalanj/confl v0.0.0-20190502200917-a896ad155907 h1:MiYJRuGTnSFFPgI+G3b1Kx0ezVP2QgAoRRoADstKv2A=
 github.com/nalanj/confl v0.0.0-20190502200917-a896ad155907/go.mod h1:/I5++jhs0HJBYY3QCaQzr+Rq+DMB6iWCZMcn2cQ9bcY=
 github.com/nalanj/confl v0.0.0-20190504051815-c2e54e7da981 h1:1a6ahehu6ZdORkqMt++MGndGItgF4BV/2eIHuD9ZjOQ=

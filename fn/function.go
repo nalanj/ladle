@@ -35,8 +35,9 @@ type Function struct {
 	out *io.PipeReader
 }
 
-// Start starts the function's executable
-func (f *Function) Start() error {
+// Start starts the function's executable. This isn't a function on the function
+// struct because the function struct exposes all exported functions over RPC
+func Start(f *Function) error {
 	port, portErr := freePort()
 	if portErr != nil {
 		return portErr
@@ -60,7 +61,7 @@ func (f *Function) Start() error {
 	pinged := false
 	start := time.Now()
 	for time.Now().Before(start.Add(10 * time.Second)) {
-		if f.Ping() {
+		if f.ping() {
 			pinged = true
 			break
 		}
@@ -94,9 +95,9 @@ func (f *Function) rpcClient() (*rpc.Client, error) {
 	return rpc.Dial("tcp", fmt.Sprintf(":%d", f.port))
 }
 
-// Ping pings the given function and returns true on success, or false if the
+// ping pings the given function and returns true on success, or false if the
 // ping failed for any reason
-func (f *Function) Ping() bool {
+func (f *Function) ping() bool {
 	client, clientErr := f.rpcClient()
 	if clientErr != nil {
 		return false

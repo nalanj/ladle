@@ -14,7 +14,7 @@ func TestFunctionStart(t *testing.T) {
 		t.Parallel()
 
 		f := &Function{Name: "Test", Handler: "not-here"}
-		err := f.Start()
+		err := Start(f)
 		assert.NotNil(t, err)
 	})
 
@@ -22,7 +22,7 @@ func TestFunctionStart(t *testing.T) {
 		t.Parallel()
 
 		f := &Function{Name: "Test", Handler: "../build/echo"}
-		err := f.Start()
+		err := Start(f)
 		assert.Nil(t, err)
 
 		assert.NotNil(t, f.cmd)
@@ -35,7 +35,7 @@ func TestFunctionInvoke(t *testing.T) {
 	t.Parallel()
 
 	f := &Function{Name: "Test", Handler: "../build/echo"}
-	err := f.Start()
+	err := Start(f)
 	assert.Nil(t, err)
 
 	req := &messages.InvokeRequest{Payload: []byte("{}")}
