@@ -2,10 +2,14 @@ package gw
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda/messages"
 
 	"github.com/nalanj/ladle/config"
 	"github.com/nalanj/ladle/fn"
@@ -83,4 +87,25 @@ func TestInvoke(t *testing.T) {
 
 	stopErr := fn.Stop(functions["Echo"])
 	assert.Nil(t, stopErr)
+}
+
+func TestWriteInvokeResponse(t *testing.T) {
+	w := httptest.NewRecorder()
+	gwResp := &events.APIGatewayProxyResponse{
+		Body:       "test body",
+		Headers:    map[string]string{"Cool-Header": "yes"},
+		StatusCode: http.StatusCreated,
+	}
+	gwRespBytes, marshalErr := json.Marshal(gwResp)
+	assert.Nil(t, marshalErr)
+
+	writeErr := writeInvokeResponse(
+		w,
+		&messages.InvokeResponse{Payload: gwRespBytes},
+	)
+	assert.Nil(t, writeErr)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+	assert.Equal(t, "test body", w.Body.String())
+	assert.Equal(t, "yes", w.Header().Get("Cool-Header"))
 }
