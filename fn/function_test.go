@@ -27,7 +27,7 @@ func TestFunctionStart(t *testing.T) {
 
 		assert.NotNil(t, f.cmd)
 		assert.NotNil(t, f.cmd.Process)
-		assert.Nil(t, f.cmd.Process.Kill())
+		assert.Nil(t, Stop(f))
 	})
 }
 
@@ -45,5 +45,5 @@ func TestFunctionInvoke(t *testing.T) {
 	assert.Nil(t, invokeErr)
 	assert.Nil(t, resp.Error)
 	assert.NotNil(t, resp.Payload)
-	assert.Nil(t, f.cmd.Process.Kill())
+	assert.Nil(t, Stop(f))
 }

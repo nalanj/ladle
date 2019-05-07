@@ -76,6 +76,16 @@ func Start(f *Function) error {
 	return nil
 }
 
+// Stop stops the function
+func Stop(f *Function) error {
+	if f.cmd != nil && f.cmd.Process != nil {
+		return f.cmd.Process.Kill()
+	}
+
+	// it wasn't running anyway
+	return nil
+}
+
 // readOutput reads output from the output buffer
 func (f *Function) readOutput() {
 	r := bufio.NewReader(f.out)

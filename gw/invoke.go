@@ -69,7 +69,9 @@ func invoke(conf *config.Config, w http.ResponseWriter, r *wrappedRequest) {
 }
 
 // writes an http response based on the given InvokeResponse
-func writeInvokeResponse(w http.ResponseWriter, resp *messages.InvokeResponse) error {
+func writeInvokeResponse(
+	w http.ResponseWriter, resp *messages.InvokeResponse,
+) error {
 	var gwResp events.APIGatewayProxyResponse
 	if unmarshalErr := json.Unmarshal(resp.Payload, &gwResp); unmarshalErr != nil {
 		return unmarshalErr
