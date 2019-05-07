@@ -70,11 +70,22 @@ func TestRouteMatch(t *testing.T) {
 			false,
 			nil,
 		},
+		{
+			"misses on non API source",
+			&fn.Event{
+				Source: "whatever",
+				Meta:   map[string]string{"Route": "/test/function"},
+			},
+			false,
+			nil,
+		},
 	}
 
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			params, match := routeMatch(req, test.event)
 			assert.Equal(t, test.match, match)
 			assert.Equal(t, test.params, params)
