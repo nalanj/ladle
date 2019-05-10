@@ -37,20 +37,27 @@ func (r *wrappedRequest) errorLog(err error) {
 }
 
 // prepareRequest converts an http.Request into an InvokeRequest
-func (r *wrappedRequest) prepareRequest(pathParams map[string]string) (*messages.InvokeRequest, error) {
+func (r *wrappedRequest) prepareRequest(
+	pathParams map[string]string,
+) (*messages.InvokeRequest, error) {
 	body, bodyErr := ioutil.ReadAll(r.r.Body)
 	if bodyErr != nil {
 		return nil, bodyErr
 	}
 
+	headers := make(map[string]string)
+	for k, v := range r.r.Header {
+		headers[k] = v[0]
+	}
+
 	gwR := events.APIGatewayProxyRequest{
-		Resource:        "",
-		Path:            r.r.URL.Path,
-		PathParameters:  pathParams,
-		HTTPMethod:      r.r.Method,
-		Headers:         make(map[string]string),
-		Body:            string(body),
-		IsBase64Encoded: false,
+		Path:              r.r.URL.Path,
+		PathParameters:    pathParams,
+		HTTPMethod:        r.r.Method,
+		Headers:           headers,
+		MultiValueHeaders: r.r.Header,
+		Body:              string(body),
+		IsBase64Encoded:   false,
 		RequestContext: events.APIGatewayProxyRequestContext{
 			RequestID: r.id,
 		},

@@ -18,6 +18,8 @@ func TestPrepareRequest(t *testing.T) {
 		"https://testing.com:3030/test/function",
 		bytes.NewReader([]byte("testBody")),
 	)
+	req.Header.Add("Rando-Header", "Value1")
+	req.Header.Add("Rando-Header", "Value2")
 	assert.Nil(t, reqErr)
 
 	wr := newRequest(req)
@@ -34,4 +36,10 @@ func TestPrepareRequest(t *testing.T) {
 	assert.Equal(t, "POST", gwR.HTTPMethod)
 	assert.Equal(t, "testBody", gwR.Body)
 	assert.Equal(t, wr.id, gwR.RequestContext.RequestID)
+	assert.Equal(t, "Value1", gwR.Headers["Rando-Header"])
+	assert.Equal(
+		t,
+		[]string{"Value1", "Value2"},
+		gwR.MultiValueHeaders["Rando-Header"],
+	)
 }
