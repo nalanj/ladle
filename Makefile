@@ -1,16 +1,23 @@
+EXE_EXT := ""
+ifeq ($(OS),Windows_NT)
+	EXE_EXT := .exe
+endif
+
+LADLE_TARGET := build/ladle$(EXE_EXT)
+ECHO_TARGET := build/echo$(EXE_EXT)
+
 # Build all the binaries
 .PHONY: build
-build: build/ladle build/echo
-
+build: $(LADLE_TARGET) $(ECHO_TARGET)
 # Test everything
 .PHONY: test
 test:
 	go test -cover -race ./...
 
-.PHONY: build/ladle
-build/ladle:
+.PHONY: $(LADLE_TARGET)
+$(LADLE_TARGET): 
 	go build -o $@
 
-.PHONY: build/echo
-build/echo:
+.PHONY: $(ECHO_TARGET)
+$(ECHO_TARGET):
 	go build -o $@ ./lambdas/echo
