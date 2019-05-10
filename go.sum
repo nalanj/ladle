@@ -15,6 +15,8 @@ github.com/nalanj/confl v0.0.0-20190504052727-9a4e712e80c9 h1:5cB4lMn7IXTeozUP2e
 github.com/nalanj/confl v0.0.0-20190504052727-9a4e712e80c9/go.mod h1:/I5++jhs0HJBYY3QCaQzr+Rq+DMB6iWCZMcn2cQ9bcY=
 github.com/nalanj/confl v0.0.0-20190504054544-c4a539977925 h1:nsraQZJx1LjkRng31BPAZDaEQ8rhIcyg/YlDetUCUTI=
 github.com/nalanj/confl v0.0.0-20190504054544-c4a539977925/go.mod h1:/I5++jhs0HJBYY3QCaQzr+Rq+DMB6iWCZMcn2cQ9bcY=
+github.com/nalanj/confl v0.0.0-20190510174106-6676570f0f2b h1:jsASZPtDcEuB7jEzKShMbxPwOa2gW6QxXbqfz0tHB4c=
+github.com/nalanj/confl v0.0.0-20190510174106-6676570f0f2b/go.mod h1:/I5++jhs0HJBYY3QCaQzr+Rq+DMB6iWCZMcn2cQ9bcY=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/spf13/cobra v0.0.3 h1:ZlrZ4XsMRm04Fr5pSFxBgfND2EBVa1nLpiy1stUsX/8=
