@@ -1,6 +1,5 @@
-EXE_EXT := ""
 ifeq ($(OS),Windows_NT)
-	EXE_EXT := .exe
+  EXE_EXT := .exe
 endif
 
 LADLE_TARGET := build/ladle$(EXE_EXT)
