@@ -1,0 +1,9 @@
+Functions={
+    Testing={
+        Handler=function
+    }
+}
+
+Events=[
+    {Source=API Target=Testing Meta={Route="/Testing"} InvalidKey=yes}
+]

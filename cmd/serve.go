@@ -42,7 +42,7 @@ var functions map[string]*fn.Function
 func serve() error {
 	done := make(chan bool)
 
-	conf, confErr := config.Parse(configPath)
+	conf, confErr := config.ParsePath(configPath)
 	if confErr != nil {
 		return confErr
 	}

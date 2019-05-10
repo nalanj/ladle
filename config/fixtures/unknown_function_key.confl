@@ -1,0 +1,6 @@
+Functions={
+    TestFunction={
+        Handler=testing
+        UnknownKey=yes
+    }
+}

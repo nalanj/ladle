@@ -1,0 +1,9 @@
+Functions={
+    Testing={
+        Handler=function
+    }
+}
+
+Events=[
+    {Source=12 Target=Testing Meta={Route="/Testing"}}
+]

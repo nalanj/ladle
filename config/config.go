@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/nalanj/confl"
@@ -19,18 +20,25 @@ type Config struct {
 	Events []*fn.Event
 }
 
-// Parse parses the config file and returns the resulting config
-func Parse(path string) (*Config, error) {
-	conf := &Config{
-		Functions: make(map[string]*fn.Function),
-	}
-
+// ParsePath parses the config file at the given path and returns the resulting
+// config
+func ParsePath(path string) (*Config, error) {
 	file, openErr := os.Open(path)
 	if openErr != nil {
 		return nil, openErr
 	}
+	defer file.Close()
 
-	doc, parseErr := confl.Parse(file)
+	return Parse(file)
+}
+
+// Parse parses the config file and returns the resulting config
+func Parse(reader io.Reader) (*Config, error) {
+	conf := &Config{
+		Functions: make(map[string]*fn.Function),
+	}
+
+	doc, parseErr := confl.Parse(reader)
 	if parseErr != nil {
 		return nil, parseErr
 	}
@@ -79,9 +87,6 @@ func readFunctions(fnsNode confl.Node) (map[string]*fn.Function, error) {
 
 // readFunction reads a function def from the config
 func readFunction(fnKey confl.Node, fnNode confl.Node) (*fn.Function, error) {
-	if !confl.IsText(fnKey) {
-		return nil, errors.New("Invalid function name")
-	}
 	name := fnKey.Value()
 
 	if fnNode.Type() != confl.MapType {
@@ -156,6 +161,8 @@ func readEvent(eventNode confl.Node) (*fn.Event, error) {
 			}
 
 			event.Meta = meta
+		default:
+			return nil, errors.New("Invalid key")
 		}
 	}
 

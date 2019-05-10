@@ -1,0 +1,9 @@
+Functions={
+    Testing={
+        Handler=function
+    }
+}
+
+Events=[
+    testing
+]
