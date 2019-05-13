@@ -66,6 +66,8 @@ func serve() error {
 	for {
 		select {
 		case restart := <-fnDone:
+			log.Printf("Core: Restarting Fn %s\n", restart)
+
 			oldFn, ok := runningFunctions[restart]
 			if !ok {
 				log.Printf(

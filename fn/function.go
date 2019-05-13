@@ -9,6 +9,8 @@ import (
 	"net/rpc"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda/messages"
@@ -27,6 +29,9 @@ type Function struct {
 
 	// port is the port for the function
 	port int
+
+	// running notes if the command is being executed
+	running bool
 
 	// cmd is the command being executed
 	cmd *exec.Cmd
@@ -59,18 +64,27 @@ func Start(f *Function, done chan<- string) error {
 	}
 	f.port = port
 
-	f.cmd = exec.Command(f.Handler)
+	handler := f.Handler
+	if runtime.GOOS == "windows" && filepath.Ext(handler) == "" {
+		// add .exe on windows
+		handler += ".exe"
+	}
+
+	f.cmd = exec.Command(handler)
 	f.cmd.Env = append(os.Environ(), fmt.Sprintf("_LAMBDA_SERVER_PORT=%d", f.port))
 
 	read, write := io.Pipe()
 	f.out = read
 	f.cmd.Stdout = write
 	f.cmd.Stderr = write
-	go f.readOutput()
 
 	if runErr := f.cmd.Start(); runErr != nil {
 		return runErr
 	}
+	f.running = true
+
+	go f.readOutput()
+	go f.watchHandler(handler)
 
 	// give it up to 10 seconds to actually start
 	pinged := false
@@ -94,13 +108,38 @@ func Start(f *Function, done chan<- string) error {
 // Stop stops the function
 func Stop(f *Function) error {
 	if f.cmd != nil && f.cmd.Process != nil {
-		return f.cmd.Process.Kill()
+		killErr := f.cmd.Process.Kill()
+		f.running = false
+		f.done <- f.Name
+		return killErr
 	}
-
-	f.done <- f.Name
 
 	// it wasn't running anyway
 	return nil
+}
+
+// watchHandler watches the handler for change and if it changes, stops the
+// function
+func (f *Function) watchHandler(handler string) {
+	mtime := time.Now()
+
+	for f.running == true {
+		info, statErr := os.Stat(handler)
+		if statErr != nil {
+			panic(statErr)
+		}
+
+		if info.ModTime().After(mtime) {
+			log.Printf("Fn %s: Handler changed, stopping\n", f.Name)
+			stopErr := Stop(f)
+			if stopErr != nil {
+				panic(stopErr)
+			}
+			break
+		}
+
+		time.Sleep(1 * time.Second)
+	}
 }
 
 // readOutput reads output from the output buffer
