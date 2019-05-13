@@ -9,16 +9,17 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda/messages"
 	"github.com/nalanj/ladle/config"
+	"github.com/nalanj/ladle/fn"
 )
 
 // InvokeHandler returns a handler that can invoke called functions via http
-func InvokeHandler(conf *config.Config) http.Handler {
+func InvokeHandler(conf *config.Config, i fn.Invoker) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 
 		wr := newRequest(r)
 		wr.log(fmt.Sprintf("Start %s", wr.r.URL.Path))
-		invoke(conf, w, wr)
+		invoke(conf, i, w, wr)
 
 		wr.log(
 			fmt.Sprintf(
@@ -31,7 +32,12 @@ func InvokeHandler(conf *config.Config) http.Handler {
 
 // invoke wraps http invocation and makes it easier to deal with logging
 // of requests
-func invoke(conf *config.Config, w http.ResponseWriter, r *wrappedRequest) {
+func invoke(
+	conf *config.Config,
+	i fn.Invoker,
+	w http.ResponseWriter,
+	r *wrappedRequest,
+) {
 	f, pathParams := route(conf, r.r)
 	if f == nil {
 		r.log("No matching route")
@@ -47,7 +53,7 @@ func invoke(conf *config.Config, w http.ResponseWriter, r *wrappedRequest) {
 	}
 
 	resp := &messages.InvokeResponse{}
-	invokeErr := f.Invoke(invokeReq, resp)
+	invokeErr := i(f.Name, invokeReq, resp)
 	if invokeErr != nil {
 		r.errorLog(invokeErr)
 		w.WriteHeader(http.StatusInternalServerError)

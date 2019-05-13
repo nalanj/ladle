@@ -47,6 +47,15 @@ func TestInvoke(t *testing.T) {
 		"Echo":        &fn.Function{Name: "Echo", Handler: "../build/echo"},
 		"InvokeError": &fn.Function{Name: "InvokeError", Handler: "n/a"},
 	}
+
+	invoker := func(
+		name string,
+		req *messages.InvokeRequest,
+		resp *messages.InvokeResponse,
+	) error {
+		return functions[name].Invoke(req, resp)
+	}
+
 	done := make(chan string, 20)
 	startErr := fn.Start(functions["Echo"], done)
 	assert.Nil(t, startErr)
@@ -80,7 +89,7 @@ func TestInvoke(t *testing.T) {
 			assert.Nil(t, reqErr)
 			wr := newRequest(req)
 
-			invoke(cfg, w, wr)
+			invoke(cfg, invoker, w, wr)
 
 			assert.Equal(t, test.status, w.Code)
 		})

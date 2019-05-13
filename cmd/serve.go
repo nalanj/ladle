@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/rpc"
 	"os"
+	"sync"
 
 	"github.com/aws/aws-lambda-go/lambda/messages"
 	"github.com/nalanj/confl"
@@ -39,6 +40,7 @@ var serveCmd = &cobra.Command{
 }
 
 var runningFunctions map[string]*fn.Function
+var runningFunctionsMtx sync.Mutex
 
 func serve() error {
 	conf, confErr := config.ParsePath(configPath)
@@ -46,6 +48,7 @@ func serve() error {
 		return confErr
 	}
 
+	runningFunctionsMtx.Lock()
 	runningFunctions = make(map[string]*fn.Function)
 
 	fnDone := make(chan string, 20)
@@ -59,15 +62,17 @@ func serve() error {
 		rpc.RegisterName(execFn.Name, &RPCInvokeWrapper{Name: execFn.Name})
 		runningFunctions[execFn.Name] = execFn
 	}
+	runningFunctionsMtx.Unlock()
 
-	go invokeListener(conf)
-	go httpListener(conf)
+	go rpcListener(conf)
+	go httpListener(conf, globalInvoker)
 
 	for {
 		select {
 		case restart := <-fnDone:
 			log.Printf("Core: Restarting Fn %s\n", restart)
 
+			runningFunctionsMtx.Lock()
 			oldFn, ok := runningFunctions[restart]
 			if !ok {
 				log.Printf(
@@ -86,8 +91,25 @@ func serve() error {
 			}
 
 			runningFunctions[newFn.Name] = newFn
+			runningFunctionsMtx.Unlock()
 		}
 	}
+}
+
+func globalInvoker(
+	name string,
+	req *messages.InvokeRequest,
+	resp *messages.InvokeResponse,
+) error {
+	runningFunctionsMtx.Lock()
+	runningFunc, ok := runningFunctions[name]
+	runningFunctionsMtx.Unlock()
+
+	if !ok {
+		return fmt.Errorf("Function %s not running", runningFunc.Name)
+	}
+
+	return runningFunc.Invoke(req, resp)
 }
 
 // RPCInvokeWrapper exposes Invoke for the given function
@@ -100,16 +122,12 @@ func (r *RPCInvokeWrapper) Invoke(
 	req *messages.InvokeRequest,
 	resp *messages.InvokeResponse,
 ) error {
-	runningFunc, ok := runningFunctions[r.Name]
-	if !ok {
-		return fmt.Errorf("Function %s not running", runningFunc.Name)
-	}
-	return runningFunc.Invoke(req, resp)
+	return globalInvoker(r.Name, req, resp)
 }
 
-// invokeListener listens with rpc to the given port and passes messages on
+// rpcListener listens with rpc to the given port and passes messages on
 // to the called function
-func invokeListener(conf *config.Config) {
+func rpcListener(conf *config.Config) {
 	lis, lisErr := net.Listen("tcp", rpcAddress)
 	if lisErr != nil {
 		panic(lisErr)
@@ -120,7 +138,7 @@ func invokeListener(conf *config.Config) {
 }
 
 // httpListener starts up a listener that simulates api gateway
-func httpListener(conf *config.Config) {
+func httpListener(conf *config.Config, i fn.Invoker) {
 	log.Printf("HTTP: Listening on %s\n", httpAddress)
-	http.ListenAndServe(httpAddress, gw.InvokeHandler(conf))
+	http.ListenAndServe(httpAddress, gw.InvokeHandler(conf, i))
 }
