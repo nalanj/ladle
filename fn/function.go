@@ -30,9 +30,6 @@ type Function struct {
 	// port is the port for the function
 	port int
 
-	// running notes if the command is being executed
-	running bool
-
 	// cmd is the command being executed
 	cmd *exec.Cmd
 
@@ -81,7 +78,6 @@ func Start(f *Function, done chan<- string) error {
 	if runErr := f.cmd.Start(); runErr != nil {
 		return runErr
 	}
-	f.running = true
 
 	go f.readOutput()
 	go f.watchHandler(handler)
@@ -109,7 +105,6 @@ func Start(f *Function, done chan<- string) error {
 func Stop(f *Function) error {
 	if f.cmd != nil && f.cmd.Process != nil {
 		killErr := f.cmd.Process.Kill()
-		f.running = false
 		f.done <- f.Name
 		return killErr
 	}
@@ -123,7 +118,7 @@ func Stop(f *Function) error {
 func (f *Function) watchHandler(handler string) {
 	mtime := time.Now()
 
-	for f.running == true {
+	for {
 		info, statErr := os.Stat(handler)
 		if statErr != nil {
 			panic(statErr)
@@ -200,7 +195,7 @@ func (f *Function) Invoke(req *messages.InvokeRequest, resp *messages.InvokeResp
 
 // freePort grabs a free port
 func freePort() (int, error) {
-	ln, listenErr := net.Listen("tcp", ":0")
+	ln, listenErr := net.Listen("tcp", "localhost:0")
 	if listenErr != nil {
 		return 0, listenErr
 	}

@@ -48,7 +48,7 @@ func serve() error {
 
 	runningFunctions = make(map[string]*fn.Function)
 
-	fnDone := make(chan string)
+	fnDone := make(chan string, 20)
 	for _, f := range conf.Functions {
 		execFn := fn.Dup(f)
 		err := fn.Start(execFn, fnDone)

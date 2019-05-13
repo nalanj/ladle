@@ -47,7 +47,7 @@ func TestInvoke(t *testing.T) {
 		"Echo":        &fn.Function{Name: "Echo", Handler: "../build/echo"},
 		"InvokeError": &fn.Function{Name: "InvokeError", Handler: "n/a"},
 	}
-	done := make(chan string)
+	done := make(chan string, 20)
 	startErr := fn.Start(functions["Echo"], done)
 	assert.Nil(t, startErr)
 
