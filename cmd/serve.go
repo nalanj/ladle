@@ -8,6 +8,7 @@ import (
 	"net/rpc"
 	"os"
 
+	"github.com/aws/aws-lambda-go/lambda/messages"
 	"github.com/nalanj/confl"
 	"github.com/nalanj/ladle/config"
 	"github.com/nalanj/ladle/fn"
@@ -37,41 +38,79 @@ var serveCmd = &cobra.Command{
 	},
 }
 
-var functions map[string]*fn.Function
+var runningFunctions map[string]*fn.Function
 
 func serve() error {
-	done := make(chan bool)
-
 	conf, confErr := config.ParsePath(configPath)
 	if confErr != nil {
 		return confErr
 	}
 
+	runningFunctions = make(map[string]*fn.Function)
+
 	fnDone := make(chan string)
 	for _, f := range conf.Functions {
-		err := fn.Start(f, fnDone)
+		execFn := fn.Dup(f)
+		err := fn.Start(execFn, fnDone)
 		if err != nil {
 			panic(err)
 		}
+
+		rpc.RegisterName(execFn.Name, &RPCInvokeWrapper{Name: execFn.Name})
+		runningFunctions[execFn.Name] = execFn
 	}
 
 	go invokeListener(conf)
 	go httpListener(conf)
-	<-done
 
-	return nil
+	for {
+		select {
+		case restart := <-fnDone:
+			oldFn, ok := runningFunctions[restart]
+			if !ok {
+				log.Printf(
+					"Core: Attempted restart on inactive function %s\n",
+					restart,
+				)
+				continue
+			}
+
+			delete(runningFunctions, restart)
+
+			newFn := fn.Dup(oldFn)
+			err := fn.Start(newFn, fnDone)
+			if err != nil {
+				panic(err)
+			}
+
+			runningFunctions[newFn.Name] = newFn
+		}
+	}
 }
 
-// invokeListener listens with rpc to the given port and passes messages on to the
-// called function
+// RPCInvokeWrapper exposes Invoke for the given function
+type RPCInvokeWrapper struct {
+	Name string
+}
+
+// Invoke invokes the given function
+func (r *RPCInvokeWrapper) Invoke(
+	req *messages.InvokeRequest,
+	resp *messages.InvokeResponse,
+) error {
+	runningFunc, ok := runningFunctions[r.Name]
+	if !ok {
+		return fmt.Errorf("Function %s not running", runningFunc.Name)
+	}
+	return runningFunc.Invoke(req, resp)
+}
+
+// invokeListener listens with rpc to the given port and passes messages on
+// to the called function
 func invokeListener(conf *config.Config) {
 	lis, lisErr := net.Listen("tcp", rpcAddress)
 	if lisErr != nil {
 		panic(lisErr)
-	}
-
-	for _, f := range conf.Functions {
-		rpc.RegisterName(f.Name, f)
 	}
 
 	log.Printf("RPC: Listening on %s\n", rpcAddress)

@@ -13,7 +13,8 @@ import (
 // Config is a struct representing the configuration of the service
 type Config struct {
 
-	// Functions is a map of the named functions
+	// Functions is a map of the named functions for access to their
+	// configurations
 	Functions map[string]*fn.Function
 
 	// Events is a slice of defined events

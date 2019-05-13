@@ -38,6 +38,12 @@ type Function struct {
 	done chan<- string
 }
 
+// Dup duplicates the given function's configuration without duplicating its
+// execution state
+func Dup(f *Function) *Function {
+	return &Function{Name: f.Name, Handler: f.Handler}
+}
+
 // Start starts the function's executable. This isn't a function on the function
 // struct because the function struct exposes all exported functions over RPC
 func Start(f *Function, done chan<- string) error {
