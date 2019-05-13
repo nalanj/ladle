@@ -13,16 +13,18 @@ func TestFunctionStart(t *testing.T) {
 	t.Run("returns an error if the executable doesn't exist", func(t *testing.T) {
 		t.Parallel()
 
+		done := make(chan string)
 		f := &Function{Name: "Test", Handler: "not-here"}
-		err := Start(f)
+		err := Start(f, done)
 		assert.NotNil(t, err)
 	})
 
 	t.Run("starts the function if the handler is valid", func(t *testing.T) {
 		t.Parallel()
 
+		done := make(chan string)
 		f := &Function{Name: "Test", Handler: "../build/echo"}
-		err := Start(f)
+		err := Start(f, done)
 		assert.Nil(t, err)
 
 		assert.NotNil(t, f.cmd)
@@ -34,8 +36,9 @@ func TestFunctionStart(t *testing.T) {
 func TestFunctionInvoke(t *testing.T) {
 	t.Parallel()
 
+	done := make(chan string)
 	f := &Function{Name: "Test", Handler: "../build/echo"}
-	err := Start(f)
+	err := Start(f, done)
 	assert.Nil(t, err)
 
 	req := &messages.InvokeRequest{Payload: []byte("{}")}

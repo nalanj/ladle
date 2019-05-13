@@ -47,8 +47,9 @@ func serve() error {
 		return confErr
 	}
 
+	fnDone := make(chan string)
 	for _, f := range conf.Functions {
-		err := fn.Start(f)
+		err := fn.Start(f, fnDone)
 		if err != nil {
 			panic(err)
 		}

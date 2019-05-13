@@ -33,11 +33,20 @@ type Function struct {
 
 	// out is a reader for the output
 	out *io.PipeReader
+
+	// done is a channel to signal on stop
+	done chan<- string
 }
 
 // Start starts the function's executable. This isn't a function on the function
 // struct because the function struct exposes all exported functions over RPC
-func Start(f *Function) error {
+func Start(f *Function, done chan<- string) error {
+	if f.cmd != nil {
+		panic("Function instance duplicate start")
+	}
+
+	f.done = done
+
 	port, portErr := freePort()
 	if portErr != nil {
 		return portErr
@@ -81,6 +90,8 @@ func Stop(f *Function) error {
 	if f.cmd != nil && f.cmd.Process != nil {
 		return f.cmd.Process.Kill()
 	}
+
+	f.done <- f.Name
 
 	// it wasn't running anyway
 	return nil
