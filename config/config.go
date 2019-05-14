@@ -13,6 +13,12 @@ import (
 // Config is a struct representing the configuration of the service
 type Config struct {
 
+	// RPCAddress is the address for listening for RPC
+	RPCAddress string
+
+	// HTTPAddress is the address for listening for HTTP
+	HTTPAddress string
+
 	// Functions is a map of the named functions for access to their
 	// configurations
 	Functions map[string]*fn.Function
