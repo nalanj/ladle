@@ -3,6 +3,7 @@ package gw
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -53,12 +54,20 @@ func TestInvoke(t *testing.T) {
 		req *messages.InvokeRequest,
 		resp *messages.InvokeResponse,
 	) error {
-		return functions[name].Invoke(req, resp)
-	}
+		if name == "Echo" {
+			data, marshalErr := json.Marshal(
+				&events.APIGatewayProxyResponse{
+					Body:       "OK",
+					StatusCode: http.StatusOK,
+				},
+			)
+			assert.Nil(t, marshalErr)
+			resp.Payload = data
 
-	done := make(chan string, 20)
-	startErr := fn.Start(functions["Echo"], done)
-	assert.Nil(t, startErr)
+			return nil
+		}
+		return errors.New("Invoke error")
+	}
 
 	for _, test := range tests {
 		test := test
@@ -94,9 +103,6 @@ func TestInvoke(t *testing.T) {
 			assert.Equal(t, test.status, w.Code)
 		})
 	}
-
-	stopErr := fn.Stop(functions["Echo"])
-	assert.Nil(t, stopErr)
 }
 
 func TestWriteInvokeResponse(t *testing.T) {

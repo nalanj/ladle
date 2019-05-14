@@ -13,24 +13,23 @@ import (
 	"github.com/nalanj/ladle/gw"
 )
 
-var runningFunctions map[string]*fn.Function
+var runningFunctions map[string]*fn.FunctionExec
 var runningFunctionsMtx sync.Mutex
 
 // Start starts the runtime
 func Start(conf *config.Config) error {
 	runningFunctionsMtx.Lock()
-	runningFunctions = make(map[string]*fn.Function)
+	runningFunctions = make(map[string]*fn.FunctionExec)
 
 	fnDone := make(chan string, 20)
 	for _, f := range conf.Functions {
-		execFn := fn.Dup(f)
-		err := fn.Start(execFn, fnDone)
+		fnEx, err := fn.Start(f, fnDone)
 		if err != nil {
 			panic(err)
 		}
 
-		rpc.RegisterName(execFn.Name, &RPCInvokeWrapper{Name: execFn.Name})
-		runningFunctions[execFn.Name] = execFn
+		rpc.RegisterName(f.Name, &RPCInvokeWrapper{Name: f.Name})
+		runningFunctions[f.Name] = fnEx
 	}
 	runningFunctionsMtx.Unlock()
 
@@ -43,7 +42,7 @@ func Start(conf *config.Config) error {
 			log.Printf("Core: Restarting Fn %s\n", restart)
 
 			runningFunctionsMtx.Lock()
-			oldFn, ok := runningFunctions[restart]
+			oldEx, ok := runningFunctions[restart]
 			if !ok {
 				log.Printf(
 					"Core: Attempted restart on inactive function %s\n",
@@ -54,32 +53,32 @@ func Start(conf *config.Config) error {
 
 			delete(runningFunctions, restart)
 
-			newFn := fn.Dup(oldFn)
-			err := fn.Start(newFn, fnDone)
+			fnEx, err := fn.Start(oldEx.Function, fnDone)
 			if err != nil {
 				panic(err)
 			}
 
-			runningFunctions[newFn.Name] = newFn
+			runningFunctions[fnEx.Function.Name] = fnEx
 			runningFunctionsMtx.Unlock()
 		}
 	}
 }
 
+// globalInvoker is an invoker based on the runtime function config
 func globalInvoker(
 	name string,
 	req *messages.InvokeRequest,
 	resp *messages.InvokeResponse,
 ) error {
 	runningFunctionsMtx.Lock()
-	runningFunc, ok := runningFunctions[name]
+	fnEx, ok := runningFunctions[name]
 	runningFunctionsMtx.Unlock()
 
 	if !ok {
-		return fmt.Errorf("Function %s not running", runningFunc.Name)
+		return fmt.Errorf("Function %s not running", name)
 	}
 
-	return runningFunc.Invoke(req, resp)
+	return fnEx.Invoke(req, resp)
 }
 
 // httpListener starts up a listener that simulates api gateway

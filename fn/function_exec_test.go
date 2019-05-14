@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFunctionStart(t *testing.T) {
+func TestFunctionExecStart(t *testing.T) {
 	t.Parallel()
 
 	t.Run("returns an error if the executable doesn't exist", func(t *testing.T) {
@@ -15,7 +15,7 @@ func TestFunctionStart(t *testing.T) {
 
 		done := make(chan string, 20)
 		f := &Function{Name: "Test", Handler: "not-here"}
-		err := Start(f, done)
+		_, err := Start(f, done)
 		assert.NotNil(t, err)
 	})
 
@@ -24,12 +24,12 @@ func TestFunctionStart(t *testing.T) {
 
 		done := make(chan string, 20)
 		f := &Function{Name: "Test", Handler: "../build/echo"}
-		err := Start(f, done)
+		fnEx, err := Start(f, done)
 		assert.Nil(t, err)
 
-		assert.NotNil(t, f.cmd)
-		assert.NotNil(t, f.cmd.Process)
-		assert.Nil(t, Stop(f))
+		assert.NotNil(t, fnEx.cmd)
+		assert.NotNil(t, fnEx.cmd.Process)
+		assert.Nil(t, Stop(fnEx))
 	})
 }
 
@@ -38,15 +38,15 @@ func TestFunctionInvoke(t *testing.T) {
 
 	done := make(chan string, 20)
 	f := &Function{Name: "Test", Handler: "../build/echo"}
-	err := Start(f, done)
+	fnEx, err := Start(f, done)
 	assert.Nil(t, err)
 
 	req := &messages.InvokeRequest{Payload: []byte("{}")}
 	resp := &messages.InvokeResponse{}
-	invokeErr := f.Invoke(req, resp)
+	invokeErr := fnEx.Invoke(req, resp)
 
 	assert.Nil(t, invokeErr)
 	assert.Nil(t, resp.Error)
 	assert.NotNil(t, resp.Payload)
-	assert.Nil(t, Stop(f))
+	assert.Nil(t, Stop(fnEx))
 }
