@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 
 	"github.com/nalanj/confl"
 	"github.com/nalanj/ladle/fn"
@@ -12,6 +13,8 @@ import (
 
 // Config is a struct representing the configuration of the service
 type Config struct {
+	// Path is the path to the config file
+	Path string
 
 	// RPCAddress is the address for listening for RPC
 	RPCAddress string
@@ -36,11 +39,22 @@ func ParsePath(path string) (*Config, error) {
 	}
 	defer file.Close()
 
-	return Parse(file)
+	conf, parseErr := parse(file)
+	if parseErr != nil {
+		return nil, parseErr
+	}
+
+	conf.Path = path
+	return conf, nil
 }
 
-// Parse parses the config file and returns the resulting config
-func Parse(reader io.Reader) (*Config, error) {
+// RuntimeDir returns the .ladle dir where ladle caches builds
+func (conf *Config) RuntimeDir() string {
+	return path.Join(path.Dir(conf.Path), ".ladle")
+}
+
+// parse parses the config file and returns the resulting config
+func parse(reader io.Reader) (*Config, error) {
 	conf := &Config{
 		Functions: make(map[string]*fn.Function),
 	}
