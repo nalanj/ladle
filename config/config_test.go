@@ -42,6 +42,7 @@ func TestParsePath(t *testing.T) {
 			"valid config",
 			"valid.confl",
 			&Config{
+				Path: "fixtures/valid.confl",
 				Functions: map[string]*fn.Function{
 					"Testing": &fn.Function{
 						Name:    "Testing",
