@@ -15,16 +15,13 @@ jobs:
       - run: mkdir -p ${TEST_RESULTS}
       - run: go get github.com/jstemmer/go-junit-report
       - run:
-          name: Build echo service for tests
-          command: make build/echo
+          name: Build everything
+          command: make build
       - run:
-          name: Unit Tests
+          name: Run Unit Tests
           command: |
             trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
             make ci-test | tee ${TEST_RESULTS}/go-test.out
-      - run:
-          name: Build ladle command
-          command: make build/ladle
 
       - store_artifacts:
           path: /tmp/test-results
