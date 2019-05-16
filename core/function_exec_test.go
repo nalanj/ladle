@@ -8,17 +8,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	echoPkg = "github.com/nalanj/ladle/lambdas/echo"
+)
+
 func TestFunctionExecStart(t *testing.T) {
 	t.Parallel()
-
-	echoPkg := "github.com/nalanj/ladle/lambdas/echo"
 
 	t.Run("returns an error if the executable doesn't exist", func(t *testing.T) {
 		t.Parallel()
 
 		done := make(chan string, 20)
-		f := &config.Function{Name: "Test", Package: "not-here"}
-		_, err := StartFunction(&config.Config{}, f, done)
+		f := &config.Function{Name: "NotHere", Package: echoPkg}
+		_, err := StartFunction(
+			&config.Config{Path: "../ladle.confl"},
+			f,
+			done,
+		)
 		assert.NotNil(t, err)
 	})
 
@@ -26,8 +32,12 @@ func TestFunctionExecStart(t *testing.T) {
 		t.Parallel()
 
 		done := make(chan string, 20)
-		f := &config.Function{Name: "Test", Package: echoPkg}
-		fnEx, err := StartFunction(&config.Config{}, f, done)
+		f := &config.Function{Name: "Echo", Package: echoPkg}
+		fnEx, err := StartFunction(
+			&config.Config{Path: "../ladle.confl"},
+			f,
+			done,
+		)
 		assert.Nil(t, err)
 
 		assert.NotNil(t, fnEx.cmd)
@@ -40,8 +50,12 @@ func TestFunctionInvoke(t *testing.T) {
 	t.Parallel()
 
 	done := make(chan string, 20)
-	f := &config.Function{Name: "Test", Package: "../build/echo"}
-	fnEx, err := StartFunction(&config.Config{}, f, done)
+	f := &config.Function{Name: "Echo", Package: echoPkg}
+	fnEx, err := StartFunction(
+		&config.Config{Path: "../ladle.confl"},
+		f,
+		done,
+	)
 	assert.Nil(t, err)
 
 	req := &messages.InvokeRequest{Payload: []byte("{}")}

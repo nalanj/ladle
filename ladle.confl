@@ -1,5 +1,5 @@
 Functions={
-  Hello={
+  Echo={
     Package="github.com/nalanj/ladle/lambdas/echo"
   }
   Foo={
