@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/nalanj/ladle/fn"
+	"github.com/nalanj/ladle/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,14 +21,14 @@ func TestRouteMatch(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		event  *fn.Event
+		event  *config.Event
 		match  bool
 		params map[string]string
 	}{
 		{
 			"matches a literal match",
-			&fn.Event{
-				Source: fn.APISource,
+			&config.Event{
+				Source: config.APISource,
 				Meta:   map[string]string{"Route": "/test/function"},
 			},
 			true,
@@ -36,8 +36,8 @@ func TestRouteMatch(t *testing.T) {
 		},
 		{
 			"misses a literal miss",
-			&fn.Event{
-				Source: fn.APISource,
+			&config.Event{
+				Source: config.APISource,
 				Meta:   map[string]string{"Route": "/test/not-function"},
 			},
 			false,
@@ -45,8 +45,8 @@ func TestRouteMatch(t *testing.T) {
 		},
 		{
 			"matches a path param",
-			&fn.Event{
-				Source: fn.APISource,
+			&config.Event{
+				Source: config.APISource,
 				Meta:   map[string]string{"Route": "/{api}/function"},
 			},
 			true,
@@ -54,8 +54,8 @@ func TestRouteMatch(t *testing.T) {
 		},
 		{
 			"misses on route longer than path",
-			&fn.Event{
-				Source: fn.APISource,
+			&config.Event{
+				Source: config.APISource,
 				Meta:   map[string]string{"Route": "/{api}/function/testing"},
 			},
 			false,
@@ -63,8 +63,8 @@ func TestRouteMatch(t *testing.T) {
 		},
 		{
 			"misses on path longer than route",
-			&fn.Event{
-				Source: fn.APISource,
+			&config.Event{
+				Source: config.APISource,
 				Meta:   map[string]string{"Route": "/{api}"},
 			},
 			false,
@@ -72,7 +72,7 @@ func TestRouteMatch(t *testing.T) {
 		},
 		{
 			"misses on non API source",
-			&fn.Event{
+			&config.Event{
 				Source: "whatever",
 				Meta:   map[string]string{"Route": "/test/function"},
 			},

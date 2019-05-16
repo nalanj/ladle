@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-lambda-go/lambda/messages"
 
 	"github.com/nalanj/ladle/config"
-	"github.com/nalanj/ladle/fn"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -44,9 +43,9 @@ func TestInvoke(t *testing.T) {
 
 	// Test against two functions. Echo is will be running and InvokeError
 	// will not be running
-	functions := map[string]*fn.Function{
-		"Echo":        &fn.Function{Name: "Echo", Handler: "../build/echo"},
-		"InvokeError": &fn.Function{Name: "InvokeError", Handler: "n/a"},
+	functions := map[string]*config.Function{
+		"Echo":        &config.Function{Name: "Echo", Package: "../build/echo"},
+		"InvokeError": &config.Function{Name: "InvokeError", Package: "n/a"},
 	}
 
 	invoker := func(
@@ -74,14 +73,14 @@ func TestInvoke(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			cfg := &config.Config{
 				Functions: functions,
-				Events: []*fn.Event{
-					&fn.Event{
-						Source: fn.APISource,
+				Events: []*config.Event{
+					&config.Event{
+						Source: config.APISource,
 						Target: "Echo",
 						Meta:   map[string]string{"Route": "/echo"},
 					},
-					&fn.Event{
-						Source: fn.APISource,
+					&config.Event{
+						Source: config.APISource,
 						Target: "InvokeError",
 						Meta:   map[string]string{"Route": "/invoke-error"},
 					},

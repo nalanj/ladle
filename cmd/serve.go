@@ -33,7 +33,7 @@ var serveCmd = &cobra.Command{
 		conf.RPCAddress = rpcAddress
 		conf.HTTPAddress = httpAddress
 
-		if err := core.Start(conf); err != nil {
+		if err := core.StartRuntime(conf); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}

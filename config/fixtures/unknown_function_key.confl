@@ -1,6 +1,6 @@
 Functions={
     TestFunction={
-        Handler=testing
+        Package=testing
         UnknownKey=yes
     }
 }

@@ -9,11 +9,11 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda/messages"
 	"github.com/nalanj/ladle/config"
-	"github.com/nalanj/ladle/fn"
+	"github.com/nalanj/ladle/rpc"
 )
 
 // InvokeHandler returns a handler that can invoke called functions via http
-func InvokeHandler(conf *config.Config, i fn.Invoker) http.Handler {
+func InvokeHandler(conf *config.Config, i rpc.Invoker) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 
@@ -34,7 +34,7 @@ func InvokeHandler(conf *config.Config, i fn.Invoker) http.Handler {
 // of requests
 func invoke(
 	conf *config.Config,
-	i fn.Invoker,
+	i rpc.Invoker,
 	w http.ResponseWriter,
 	r *wrappedRequest,
 ) {

@@ -1,6 +1,10 @@
 Functions={
-  Hello={Handler="build/echo"}
-  Foo={Handler="build/echo"}
+  Hello={
+    Package="github.com/nalanj/ladle/lambdas/echo"
+  }
+  Foo={
+    Package="github.com/nalanj/ladle/lambdas/echo"
+  }
 }
 
 Events=[

@@ -5,11 +5,10 @@ import (
 	"strings"
 
 	"github.com/nalanj/ladle/config"
-	"github.com/nalanj/ladle/fn"
 )
 
 // route converts a request to its corresponding function
-func route(conf *config.Config, r *http.Request) (*fn.Function, map[string]string) {
+func route(conf *config.Config, r *http.Request) (*config.Function, map[string]string) {
 	for _, event := range conf.Events {
 		pathParams, ok := routeMatch(r, event)
 		if ok {
@@ -21,9 +20,9 @@ func route(conf *config.Config, r *http.Request) (*fn.Function, map[string]strin
 }
 
 // routeMatch tests if a route matches and returns path parts if it does
-func routeMatch(r *http.Request, event *fn.Event) (map[string]string, bool) {
+func routeMatch(r *http.Request, event *config.Event) (map[string]string, bool) {
 
-	if event.Source != fn.APISource {
+	if event.Source != config.APISource {
 		return nil, false
 	}
 

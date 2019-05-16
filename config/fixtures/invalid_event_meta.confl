@@ -1,6 +1,6 @@
 Functions={
     Testing={
-        Handler=function
+        Package=function
     }
 }
 

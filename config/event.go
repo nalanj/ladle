@@ -1,4 +1,4 @@
-package fn
+package config
 
 const (
 	// APISource is the source name of api events

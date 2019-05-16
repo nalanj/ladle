@@ -3,38 +3,36 @@ package core
 import (
 	"fmt"
 	"log"
-	"net/http"
-	"net/rpc"
 	"sync"
 
 	"github.com/aws/aws-lambda-go/lambda/messages"
 	"github.com/nalanj/ladle/config"
-	"github.com/nalanj/ladle/fn"
 	"github.com/nalanj/ladle/gw"
+	"github.com/nalanj/ladle/rpc"
 )
 
-var runningFunctions map[string]*fn.FunctionExec
+var runningFunctions map[string]*FunctionExec
 var runningFunctionsMtx sync.Mutex
 
-// Start starts the runtime
-func Start(conf *config.Config) error {
+// StartRuntime starts the runtime
+func StartRuntime(conf *config.Config) error {
 	runningFunctionsMtx.Lock()
-	runningFunctions = make(map[string]*fn.FunctionExec)
+	runningFunctions = make(map[string]*FunctionExec)
 
 	fnDone := make(chan string, 20)
 	for _, f := range conf.Functions {
-		fnEx, err := fn.Start(f, fnDone)
+		fnEx, err := StartFunction(conf, f, fnDone)
 		if err != nil {
 			panic(err)
 		}
 
-		rpc.RegisterName(f.Name, &RPCInvokeWrapper{Name: f.Name})
+		rpc.Register(f.Name)
 		runningFunctions[f.Name] = fnEx
 	}
 	runningFunctionsMtx.Unlock()
 
-	go rpcListener(conf)
-	go httpListener(conf, globalInvoker)
+	go rpc.Listen(conf, globalInvoker)
+	go gw.Listener(conf, globalInvoker)
 
 	for {
 		select {
@@ -53,7 +51,7 @@ func Start(conf *config.Config) error {
 
 			delete(runningFunctions, restart)
 
-			fnEx, err := fn.Start(oldEx.Function, fnDone)
+			fnEx, err := StartFunction(conf, oldEx.Function, fnDone)
 			if err != nil {
 				panic(err)
 			}
@@ -79,10 +77,4 @@ func globalInvoker(
 	}
 
 	return fnEx.Invoke(req, resp)
-}
-
-// httpListener starts up a listener that simulates api gateway
-func httpListener(conf *config.Config, i fn.Invoker) {
-	log.Printf("HTTP: Listening on %s\n", conf.HTTPAddress)
-	http.ListenAndServe(conf.HTTPAddress, gw.InvokeHandler(conf, i))
 }

@@ -4,7 +4,6 @@ import (
 	"path"
 	"testing"
 
-	"github.com/nalanj/ladle/fn"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,15 +42,15 @@ func TestParsePath(t *testing.T) {
 			"valid.confl",
 			&Config{
 				Path: "fixtures/valid.confl",
-				Functions: map[string]*fn.Function{
-					"Testing": &fn.Function{
+				Functions: map[string]*Function{
+					"Testing": &Function{
 						Name:    "Testing",
-						Handler: "function",
+						Package: "function",
 					},
 				},
-				Events: []*fn.Event{
-					&fn.Event{
-						Source: fn.APISource,
+				Events: []*Event{
+					&Event{
+						Source: APISource,
 						Target: "Testing",
 						Meta:   map[string]string{"Route": "/Testing"},
 					},

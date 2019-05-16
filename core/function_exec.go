@@ -1,4 +1,4 @@
-package fn
+package core
 
 import (
 	"bufio"
@@ -9,18 +9,20 @@ import (
 	"net/rpc"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"runtime"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda/messages"
+	"github.com/nalanj/ladle/config"
 )
 
 // FunctionExec is a running function
 type FunctionExec struct {
 
+	// Config is the configuration being run against
+	Config *config.Config
+
 	// Function is the function definition being run
-	Function *Function
+	Function *config.Function
 
 	// port is the port for the function
 	port int
@@ -32,8 +34,12 @@ type FunctionExec struct {
 	done chan<- string
 }
 
-// Start starts the given function and returns a FunctionExec.
-func Start(f *Function, done chan<- string) (*FunctionExec, error) {
+// StartFunction starts the given function and returns a FunctionExec.
+func StartFunction(
+	c *config.Config,
+	f *config.Function,
+	done chan<- string,
+) (*FunctionExec, error) {
 	fnEx := &FunctionExec{Function: f}
 	fnEx.done = done
 
@@ -43,13 +49,8 @@ func Start(f *Function, done chan<- string) (*FunctionExec, error) {
 	}
 	fnEx.port = port
 
-	handler := f.Handler
-	if runtime.GOOS == "windows" && filepath.Ext(handler) == "" {
-		// add .exe on windows
-		handler += ".exe"
-	}
-
-	fnEx.cmd = exec.Command(handler)
+	executable := c.FunctionExecutable(f)
+	fnEx.cmd = exec.Command(executable)
 	fnEx.cmd.Env = append(
 		os.Environ(),
 		fmt.Sprintf("_LAMBDA_SERVER_PORT=%d", fnEx.port),
@@ -64,7 +65,7 @@ func Start(f *Function, done chan<- string) (*FunctionExec, error) {
 	}
 
 	go readOutput(f.Name, read)
-	go fnEx.watchHandler(handler)
+	go fnEx.watchExecutable(executable)
 
 	// give it up to 10 seconds to actually start
 	pinged := false
@@ -85,8 +86,8 @@ func Start(f *Function, done chan<- string) (*FunctionExec, error) {
 	return fnEx, nil
 }
 
-// Stop stops the function
-func Stop(fnEx *FunctionExec) error {
+// StopFunction stops the function
+func StopFunction(fnEx *FunctionExec) error {
 	if fnEx.cmd != nil && fnEx.cmd.Process != nil {
 		killErr := fnEx.cmd.Process.Kill()
 		fnEx.done <- fnEx.Function.Name
@@ -97,9 +98,9 @@ func Stop(fnEx *FunctionExec) error {
 	return nil
 }
 
-// watchHandler watches the handler for change and if it changes, stops the
-// function
-func (fnEx *FunctionExec) watchHandler(handler string) {
+// watchExecutable watches the executable for change and if it changes,
+// stops the function
+func (fnEx *FunctionExec) watchExecutable(handler string) {
 	mtime := time.Now()
 
 	for {
@@ -110,10 +111,10 @@ func (fnEx *FunctionExec) watchHandler(handler string) {
 
 		if info.ModTime().After(mtime) {
 			log.Printf(
-				"Fn %s: Handler changed, stopping\n",
+				"Fn %s: Function changed, stopping\n",
 				fnEx.Function.Name,
 			)
-			stopErr := Stop(fnEx)
+			stopErr := StopFunction(fnEx)
 			if stopErr != nil {
 				panic(stopErr)
 			}

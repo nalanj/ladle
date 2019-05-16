@@ -1,4 +1,4 @@
-package fn
+package rpc
 
 import "github.com/aws/aws-lambda-go/lambda/messages"
 

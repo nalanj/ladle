@@ -3,12 +3,12 @@ ifeq ($(OS),Windows_NT)
 endif
 
 LADLE_TARGET := build/ladle$(EXE_EXT)
-ECHO_TARGET := build/echo$(EXE_EXT)
 
 # Build all the binaries
 .PHONY: build
-build: $(LADLE_TARGET) $(ECHO_TARGET)
-
+build: $(LADLE_TARGET)
+	$(LADLE_TARGET) build
+	
 # Test everything
 .PHONY: test
 test:
@@ -22,7 +22,3 @@ ci-test:
 .PHONY: $(LADLE_TARGET)
 $(LADLE_TARGET): 
 	go build -o $@
-
-.PHONY: $(ECHO_TARGET)
-$(ECHO_TARGET):
-	go build -o $@ ./lambdas/echo
