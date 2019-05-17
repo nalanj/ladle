@@ -9,4 +9,4 @@ Ladle simplifies development of Go based Lambda functions by providing a local r
 
 ---
 
-Ladle image courtesy National Gallery of Art, Washington
+*Ladle image courtesy National Gallery of Art, Washington*
