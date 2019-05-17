@@ -16,7 +16,7 @@ go install github.com/nalanj/ladle
 
 ## Configuration
 
-Ladle uses [Confl][https://github.com/nalanj/confl] for configuration:
+Ladle uses [Confl](https://github.com/nalanj/confl) for configuration:
 
 ```
 # The Functions section defines functions. Each function has a name and
