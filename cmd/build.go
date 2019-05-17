@@ -22,6 +22,7 @@ var buildCmd = &cobra.Command{
 		Build wraps go build as a shortcut for local builds. The executable
 		is output to .ladle.
 	`,
+	Args: cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) {
 		conf, confErr := config.ParsePath(configPath)
 		if confErr != nil {
@@ -38,12 +39,27 @@ var buildCmd = &cobra.Command{
 			os.Exit(-1)
 		}
 
-		for funcName, function := range conf.Functions {
-			if err := build(conf, funcName, function); err != nil {
+		if len(args) > 0 {
+			function, ok := conf.Functions[args[0]]
+			if !ok {
+				fmt.Printf("Function %s not found\n", args[0])
+				os.Exit(-1)
+			}
+
+			if err := build(conf, args[0], function); err != nil {
 				fmt.Println(err)
 				os.Exit(-1)
 			}
+		} else {
+			// build all functions
+			for funcName, function := range conf.Functions {
+				if err := build(conf, funcName, function); err != nil {
+					fmt.Println(err)
+					os.Exit(-1)
+				}
+			}
 		}
+
 	},
 }
 
