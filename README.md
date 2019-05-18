@@ -85,6 +85,15 @@ or to invoke a function based on a payload file:
 ladle invoke [function] [payload.json]
 ```
 
+## API Gateway
+
+At present the API Gateway supports non-proxy routes. Proxy routes and websocket
+support are planned.
+
+The gateway also supports serving static resources from the `public/` directory. 
+If a request matches a file in `public/` that file will be returned, rather than
+invoking any functions.
+
 ---
 
 *Ladle image courtesy National Gallery of Art, Washington*

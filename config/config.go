@@ -74,6 +74,12 @@ func (conf *Config) FunctionExecutable(f *Function) string {
 	return path.Join(conf.RuntimeDir(), f.Name) + ext
 }
 
+// PublicDir is the public/ path next to the config, for serving public
+// static files
+func (conf *Config) PublicDir() string {
+	return path.Join(path.Dir(conf.Path), "public")
+}
+
 // parse parses the config file and returns the resulting config
 func parse(reader io.Reader) (*Config, error) {
 	conf := &Config{
