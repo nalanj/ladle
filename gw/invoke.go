@@ -3,7 +3,11 @@ package gw
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -14,18 +18,29 @@ import (
 
 // InvokeHandler returns a handler that can invoke called functions via http
 func InvokeHandler(conf *config.Config, i rpc.Invoker) http.Handler {
+	fs := http.FileServer(http.Dir(conf.PublicDir()))
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 
-		wr := newRequest(r)
-		wr.log(fmt.Sprintf("Start %s", wr.r.URL.Path))
-		invoke(conf, i, w, wr)
+		_, statErr := os.Stat(path.Join(conf.PublicDir(), r.URL.Path))
+		if statErr == nil {
+			// serve the file statically from public/
+			w.Header().Add("Cache-Control", "no-cache")
+			if strings.HasSuffix(r.URL.Path, ".wasm") {
+				w.Header().Set("content-type", "application/wasm")
+			}
+			fs.ServeHTTP(w, r)
+		} else {
+			wr := newRequest(r)
+			wr.log(fmt.Sprintf("Start %s", wr.r.URL.Path))
+			invoke(conf, i, w, wr)
+		}
 
-		wr.log(
-			fmt.Sprintf(
-				"Invoke (%.3fms)",
-				float64(time.Now().Sub(startTime).Nanoseconds())/1000000,
-			),
+		log.Printf(
+			"HTTP %s (%.3fms)\n",
+			r.URL.Path,
+			float64(time.Now().Sub(startTime).Nanoseconds())/1000000,
 		)
 	})
 }

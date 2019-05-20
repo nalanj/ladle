@@ -16,7 +16,7 @@ go install github.com/nalanj/ladle
 
 ## Configuration
 
-Ladle uses [Confl][https://github.com/nalanj/confl] for configuration:
+Ladle uses [Confl](https://github.com/nalanj/confl) for configuration:
 
 ```
 # The Functions section defines functions. Each function has a name and
@@ -84,6 +84,15 @@ or to invoke a function based on a payload file:
 ```
 ladle invoke [function] [payload.json]
 ```
+
+## API Gateway
+
+At present the API Gateway supports non-proxy routes. Proxy routes and websocket
+support are planned.
+
+The gateway also supports serving static resources from the `public/` directory. 
+If a request matches a file in `public/` that file will be returned, rather than
+invoking any functions.
 
 ---
 
